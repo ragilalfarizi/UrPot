@@ -1,14 +1,13 @@
-
 #pragma once
 
 #include <Arduino.h>
 #include <esp_err.h>
 
-class SoilSensor {
+class Button{
  public:
-  SoilSensor();
-  ~SoilSensor();
-
+  Button();
+  ~Button();
+  
   esp_err_t begin();
 
  private:

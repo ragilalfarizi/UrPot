@@ -3,10 +3,10 @@
 #include <Arduino.h>
 #include <esp_err.h>
 
-class BTAudio {
+class FileSystem{
  public:
-  BTAudio();
-  ~BTAudio();
+  FileSystem();
+  ~FileSystem();
 
   esp_err_t begin();
 

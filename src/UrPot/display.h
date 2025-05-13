@@ -1,14 +1,13 @@
-
 #pragma once
 
 #include <Arduino.h>
 #include <esp_err.h>
 
-class EnvironmentSensor {
+class Display{
  public:
-  EnvironmentSensor();
-  ~EnvironmentSensor();
-
+  Display();
+  ~Display();
+  
   esp_err_t begin();
 
  private:
