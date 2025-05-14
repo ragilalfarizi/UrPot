@@ -4,16 +4,21 @@
 #include <esp_err.h>
 
 enum class GrowlightState {
-  OFF = 0,
+  OFF,
   ON,
 };
 
 class GrowlightController {
  public:
-  GrowlightController();
-  ~GrowlightController();
+  GrowlightController(uint8_t pin);
 
-  esp_err_t begin();
+  esp_err_t      begin();
+  esp_err_t      on();
+  esp_err_t      off();
+  esp_err_t      toggle();
+  GrowlightState getState();
 
  private:
+  uint8_t        _pin;
+  GrowlightState _state;
 };
