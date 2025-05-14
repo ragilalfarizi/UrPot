@@ -11,10 +11,10 @@
 #include "rtc.h"
 
 struct Data_t {
-  DateTime now,
-  DateTime schedule,
-  GrowlightState light_state,
-  BTState bt_state,
+  DateTime       now;
+  DateTime       schedule;
+  GrowlightState light_state;
+  BTState        bt_state;
 };
 
 class UrPot {
