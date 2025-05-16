@@ -7,8 +7,6 @@
 
 #include "defs.h"
 
-#define RTC_I2C_ADDR 0x56
-
 class RTC {
  public:
   RTC(TwoWire &wire) : _wire(wire) {}
