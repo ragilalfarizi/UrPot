@@ -18,6 +18,8 @@ class GrowlightController {
   esp_err_t      toggle();
   GrowlightState getState();
 
+  static const char *TAG;
+
  private:
   uint8_t        _pin;
   GrowlightState _state;
