@@ -1,13 +1,13 @@
 #include <unity.h>
 
-#include "UrPot/display.h"
+#include "display.h"
 
-TwoWire wireTest = TwoWire(1);
-Display display(wireTest, I2C_ADDR_DISPLAY);
+TwoWire i2c_bus = TwoWire(0);
+Display display(i2c_bus, I2C_ADDR_DISPLAY);
 
 void setUp(void) {
-  Serial.begin(115200);
-  wireTest.begin(PIN_SDA_DISPLAY, PIN_SCl_DISPLAY);
+  esp_err_t ret = display.begin();
+  TEST_ASSERT_EQUAL(ESP_OK, ret);
 }
 
 void tearDown(void) {}
@@ -42,6 +42,9 @@ void setup() {
   // Wait ~2 seconds before the Unity test runner
   // establishes connection with a board Serial interface
   delay(2000);
+
+  Serial.begin(115200);
+  i2c_bus.begin(PIN_SDA, PIN_SCL);
 
   runUnityTests();
 }
