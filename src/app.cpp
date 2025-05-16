@@ -1,4 +1,4 @@
-#include "UrPot.h"
+#include "app.h"
 
 const char* TAG = "URPOT";
 
@@ -12,12 +12,12 @@ esp_err_t UrPot::begin() {
   Serial.begin(115200);
 
   // RTC init
-  _rtc = new RTC();
-  if (_rtc == nullptr) {
-    ESP_LOGE(TAG, "RTC is Failed to Initialized.");
-    return ESP_FAIL;
-  }
-  ret = _rtc->begin();
+  // _rtc = new RTC();
+  // if (_rtc == nullptr) {
+  //   ESP_LOGE(TAG, "RTC is Failed to Initialized.");
+  //   return ESP_FAIL;
+  // }
+  // ret = _rtc->begin();
 
   // Growlight Init
   _light = new GrowlightController(8);

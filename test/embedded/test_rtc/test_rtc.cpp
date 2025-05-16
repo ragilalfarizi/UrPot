@@ -1,16 +1,21 @@
+#include <rtc.h>
 #include <unity.h>
 
-#include "UrPot/rtc.h"
+#include "defs.h"
 
-RTC rtc;
+RTC    *rtc     = nullptr;
+TwoWire i2c_bus = TwoWire(0);
 
-void setUp(void) { Serial.begin(115200); }
+void setUp(void) {
+  esp_err_t ret = rtc->begin();
+  TEST_ASSERT_EQUAL(ESP_OK, ret);
+}
 
 void tearDown(void) {}
 
 void test_init(void) {
   esp_err_t ret;
-  ret = rtc.begin();
+  ret = rtc->begin();
   TEST_ASSERT_EQUAL(ret, ESP_OK);
 }
 
@@ -18,10 +23,10 @@ void test_set_and_get_time() {
   DateTime setTime(2025, 5, 13, 15, 30, 0);
   DateTime now;
 
-  esp_err_t set_result = rtc.setTimeDate(setTime);
+  esp_err_t set_result = rtc->setTimeDate(setTime);
   TEST_ASSERT_EQUAL_HEX8(ESP_OK, set_result);
 
-  esp_err_t get_result = rtc.getTimeDate(now);
+  esp_err_t get_result = rtc->getTimeDate(now);
   TEST_ASSERT_EQUAL_HEX8(ESP_OK, get_result);
 
   // Allow small difference due to potential clock tick delay
@@ -50,6 +55,11 @@ void setup() {
   // Wait ~2 seconds before the Unity test runner
   // establishes connection with a board Serial interface
   delay(2000);
+
+  Serial.begin(115200);
+  Wire.begin(PIN_SDA, PIN_SCL);
+
+  rtc = new RTC(Wire);
 
   runUnityTests();
 }

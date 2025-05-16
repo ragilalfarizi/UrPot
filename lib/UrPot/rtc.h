@@ -5,18 +5,20 @@
 #include <Wire.h>
 #include <esp_err.h>
 
-#define I2C_ADDR_RTC 0x56
-#define PIN_SDA_RTC  0x00
-#define PIN_SCl_RTC  0x01
+#include "defs.h"
+
+#define RTC_I2C_ADDR 0x56
 
 class RTC {
  public:
-  RTC(TwoWire &wire = Wire) : _wire(wire) {}
+  RTC(TwoWire &wire) : _wire(wire) {}
   ~RTC() {}
 
   esp_err_t begin();
   esp_err_t getTimeDate(DateTime &time);
   esp_err_t setTimeDate(const DateTime &dt);
+
+  static const char *TAG;
 
  private:
   TwoWire    &_wire;
