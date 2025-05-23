@@ -3,19 +3,12 @@
 #include <Arduino.h>
 #include <esp_err.h>
 #include <esp_log.h>
+#include <rtc.h>
 
 #include "BT_audio.h"
 #include "display.h"
 #include "filesystem.h"
 #include "growlight_controller.h"
-#include "rtc.h"
-
-struct Data_t {
-  DateTime now,
-  DateTime schedule,
-  GrowlightState light_state,
-  BTState bt_state,
-};
 
 class UrPot {
  public:
@@ -31,9 +24,9 @@ class UrPot {
   /* TASK DECLARATION AND HANDLER */
 
  private:
-  GrowlightController *_light;
-  BTAudio             *_ble;
-  Display             *_disp;
-  FileSystem          *_file;
-  RTC                 *_rtc;
+  GrowlightController *_light = nullptr;
+  BTAudio             *_ble   = nullptr;
+  Display             *_disp  = nullptr;
+  FileSystem          *_file  = nullptr;
+  RTC                 *_rtc   = nullptr;
 };
