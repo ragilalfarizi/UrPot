@@ -8,11 +8,9 @@
 
 #include "defs.h"
 
-#define I2C_ADDR_DISPLAY 0x57
-
 class Display {
  public:
-  Display(TwoWire &wire, uint8_t address = I2C_ADDR_DISPLAY);
+  Display(TwoWire &wire, uint8_t address = DISPLAY_ADDRESS);
   ~Display();
 
   esp_err_t begin();

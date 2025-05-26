@@ -57,7 +57,7 @@ void setup() {
   delay(2000);
 
   Serial.begin(115200);
-  Wire.begin(PIN_SDA, PIN_SCL);
+  Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
 
   rtc = new RTC(Wire);
 

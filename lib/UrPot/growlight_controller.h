@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <esp_err.h>
 
+#include "defs.h"
+
 enum class GrowlightState {
   OFF,
   ON,

@@ -3,7 +3,7 @@
 #include "display.h"
 
 TwoWire i2c_bus = TwoWire(0);
-Display display(i2c_bus, I2C_ADDR_DISPLAY);
+Display display(i2c_bus, DISPLAY_ADDRESS);
 
 void setUp(void) {
   esp_err_t ret = display.begin();
@@ -44,7 +44,7 @@ void setup() {
   delay(2000);
 
   Serial.begin(115200);
-  i2c_bus.begin(PIN_SDA, PIN_SCL);
+  i2c_bus.begin(PIN_I2C_SDA, PIN_I2C_SCL);
 
   runUnityTests();
 }

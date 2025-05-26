@@ -1,11 +1,10 @@
 #include <unity.h>
 
-#include "UrPot/button.h"
+#include "button.h"
 
-#define TEST_BUTTON_PIN 4
+Button button(PIN_BTN_MODE);
 
-Button button(TEST_BUTTON_PIN);
-bool   clicked = false;
+bool clicked = false;
 
 void setUp(void) { Serial.begin(115200); }
 

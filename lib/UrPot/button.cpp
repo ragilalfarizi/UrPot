@@ -1,10 +1,13 @@
 #include "button.h"
 
+const char *Button::TAG = "BUTTON";
+
 Button::Button(uint8_t pin)
     : _pin(pin), _lastState(false), _callback(nullptr) {}
 
 esp_err_t Button::begin() {
   pinMode(_pin, INPUT);  // Assuming external pull-down resistor
+  ESP_LOGD(TAG, "Button initialized on pin %d", _pin);
   return ESP_OK;
 }
 

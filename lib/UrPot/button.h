@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <esp_err.h>
 
+#include "defs.h"
+
 typedef void (*ButtonCallback)();
 
 class Button {
@@ -13,6 +15,8 @@ class Button {
   void      update();                 // Call this in loop/task
   void      onClick(ButtonCallback);  // Register callback
   bool      isPressed();
+
+  static const char *TAG;
 
  private:
   uint8_t        _pin;

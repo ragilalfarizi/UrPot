@@ -5,9 +5,8 @@
 #include <esp_log.h>
 #include <rtc.h>
 
-#include "BT_audio.h"
+// #include "BT_audio.h"
 #include "display.h"
-#include "filesystem.h"
 #include "growlight_controller.h"
 
 class UrPot {
@@ -25,8 +24,7 @@ class UrPot {
 
  private:
   GrowlightController *_light = nullptr;
-  BTAudio             *_ble   = nullptr;
-  Display             *_disp  = nullptr;
-  FileSystem          *_file  = nullptr;
-  RTC                 *_rtc   = nullptr;
+  // BTAudio             *_ble   = nullptr;
+  Display *_disp = nullptr;
+  RTC     *_rtc  = nullptr;
 };

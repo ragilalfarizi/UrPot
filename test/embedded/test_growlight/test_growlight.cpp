@@ -2,9 +2,7 @@
 
 #include "growlight_controller.h"
 
-#define TEST_GROWLIGHT_PIN 2
-
-GrowlightController growlight(TEST_GROWLIGHT_PIN);
+GrowlightController growlight(PIN_RLY);
 
 void setUp(void) { growlight.begin(); }
 

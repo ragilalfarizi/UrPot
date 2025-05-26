@@ -28,12 +28,12 @@ esp_err_t UrPot::begin() {
   ret = _light->begin();
 
   // BLE init
-  _ble = new BTAudio();
-  if (_ble == nullptr) {
-    ESP_LOGE(TAG, "BLE is Failed to Initialized.");
-    return ESP_FAIL;
-  }
-  ret = _ble->begin();
+  // _ble = new BTAudio();
+  // if (_ble == nullptr) {
+  //   ESP_LOGE(TAG, "BLE is Failed to Initialized.");
+  //   return ESP_FAIL;
+  // }
+  // ret = _ble->begin();
 
   return ret;
 }
