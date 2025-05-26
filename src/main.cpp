@@ -47,7 +47,19 @@ void rtc_task(void *pvParameters);
 void debug_task(void *pvParameters);
 
 /* PERIPHERAL DECLARATION */
-TwoWire i2c_bus = TwoWire(0);
+TwoWire                  i2c_bus               = TwoWire(0);
+static volatile uint32_t mode_btn_counter      = 0;
+static volatile uint32_t growlight_btn_counter = 0;
+
+void mode_btn_callback() {
+  mode_btn_counter++;
+  ESP_LOGI(Button::TAG, "Mode button pressed");
+}
+
+void growlight_btn_callback() {
+  growlight_btn_counter++;
+  ESP_LOGI(Button::TAG, "Growlight button pressed");
+}
 
 /* OBJECT DECLARATION */
 RTC                 *rtc           = nullptr;
@@ -72,6 +84,7 @@ void setup() {
     ESP_LOGE(Button::TAG, "Failed to create mode button");
   } else {
     mode_btn->begin();
+    mode_btn->onClick(mode_btn_callback);
   }
 
   growlight_btn = new Button(PIN_BTN_GROWLIGHT);
@@ -79,6 +92,7 @@ void setup() {
     ESP_LOGE(Button::TAG, "Failed to create growlight button");
   } else {
     growlight_btn->begin();
+    growlight_btn->onClick(growlight_btn_callback);
   }
 
   /* RTC INIT */
@@ -96,6 +110,17 @@ void setup() {
     ESP_LOGE(GrowlightController::TAG, "Failed to create Growlight Controller");
   } else {
     growlight->begin();
+  }
+
+  /* DISPLAY INIT */
+  display = new Display(i2c_bus, DISPLAY_ADDRESS);
+  if (!display) {
+    ESP_LOGE(Display::TAG, "Failed to create Display");
+  } else {
+    display->begin();
+    display->clear();
+    display->print("UrPot v0.1", 0, 0);
+    display->print("Initializing...", 0, 1);
   }
 
   /* BT AUDIO INIT */
@@ -116,16 +141,23 @@ void setup() {
 
   // a2dp_sink.start("MyMusic");
 
+  UrPotState state = {
+      .mode_state      = MODE::MANUAL,
+      .bt_state        = BTState::DISCONNECTED,
+      .growlight_state = GrowlightState::OFF,
+      .rtc_state       = RTCState::OUTSIDE_SCHEDULE,
+  };
+
   /* TASK CONFIGURATION */
-  // xTaskCreatePinnedToCore(display_task, "Display", 4096, nullptr, 1,
-  //                         &display_hndlr, 0);
-  // xTaskCreatePinnedToCore(button_task, "Button", 4096, nullptr, 1,
-  //                         &button_hndlr, 0);
+  xTaskCreatePinnedToCore(display_task, "Display", 4096, nullptr, 2,
+                          &display_hndlr, 0);
+  xTaskCreatePinnedToCore(button_task, "Button", 4096, nullptr, 3,
+                          &button_hndlr, 0);
   // xTaskCreatePinnedToCore(BTAudio_task, "BTAudio", 8192, nullptr, 1,
   //                         &BTAudio_hndlr, 0);
-  // xTaskCreatePinnedToCore(growlight_task, "Growlight", 4096, nullptr, 1,
-  //                         &growlight_hndlr, 0);
-  // xTaskCreatePinnedToCore(rtc_task, "RTC", 4096, nullptr, 1, &rtc_hndlr, 0);
+  xTaskCreatePinnedToCore(growlight_task, "Growlight", 4096, nullptr, 3,
+                          &growlight_hndlr, 0);
+  xTaskCreatePinnedToCore(rtc_task, "RTC", 4096, nullptr, 4, &rtc_hndlr, 0);
   xTaskCreatePinnedToCore(debug_task, "debug", 2048, nullptr, 1,
                           &print_debug_hndlr, 0);
 }
@@ -134,27 +166,59 @@ void loop() { delay(1000); }
 
 void display_task(void *pvParameters) {
   while (1) {
-    if (state.mode_state == MODE::MANUAL) {
-      display->print("Mode: MANUAL", 0, 0);
-    } else {
-      display->print("Mode: AUTO", 0, 0);
-    }
+    display->clear();
+
+    display->print(String(data.current_time.year() % 100) + "/" +
+                       String(data.current_time.month()) + "/" +
+                       String(data.current_time.day()) + " " +
+                       String(data.current_time.hour()) + ":" +
+                       String(data.current_time.minute()) + ":" +
+                       String(data.current_time.second()),
+                   0, 0, false);
+
+    // Schedule: hh:mm:ss - hh:mm:ss
+    display->print("Schdl: " + String(data.schedule_start.hour()) + ":" +
+                       String(data.schedule_start.minute()) + " - " +
+                       String(data.schedule_end.hour()) + ":" +
+                       String(data.schedule_end.minute()),
+                   0, 10, false);
+
+    // Mode: manual/auto
+    display->print(
+        "Mode: " +
+            String((state.mode_state == MODE::MANUAL) ? "manual" : "auto"),
+        0, 20, false);
+
+    // Growlight: on/off
+    display->print(
+        "Growlight: " + String((state.growlight_state == GrowlightState::ON)
+                                   ? "on"
+                                   : "off"),
+        0, 30, false);
+
+    // Schedule: inside/outside
+    display->print(
+        "Schedule: " +
+            String((state.rtc_state == RTCState::INSIDE_SCHEDULE)    ? "inside"
+                   : (state.rtc_state == RTCState::OUTSIDE_SCHEDULE) ? "outside"
+                                                                     : "off"),
+        0, 40, false);
+
+    // BT: connect/disconnect
+    display->print(
+        "BT: " + String((state.bt_state == BTState::CONNECTED) ? "connect"
+                        : (state.bt_state == BTState::DISCONNECTED)
+                            ? "disconnect"
+                            : "off"),
+        0, 50, false);
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
-  vTaskDelay(pdMS_TO_TICKS(1000));
 }
 
 void button_task(void *pvParameters) {
-  static uint32_t mode_btn_counter = 0;
-
-  mode_btn->onClick([]() {
-    mode_btn_counter++;
-    ESP_LOGI(Button::TAG, "Mode button pressed");
-  });
-
   while (1) {
-    /* code */
     mode_btn->update();
-    growlight_btn->update();
 
     if (mode_btn_counter % 2 == 0) {
       state.mode_state = MODE::MANUAL;
@@ -185,63 +249,66 @@ void BTAudio_task(void *pvParameters) {
 }
 
 void growlight_task(void *pvParameters) {
-  static uint32_t growlight_btn_counter = 0;
-
-  growlight_btn->onClick([]() {
-    growlight_btn_counter++;
-    ESP_LOGI(Button::TAG, "Growlight button pressed");
-  });
-
   while (1) {
     if (state.mode_state == MODE::MANUAL) {
       growlight_btn->update();
 
       if (growlight_btn_counter % 2 == 0) {
-        if (state.growlight_state == GrowlightState::OFF) {
-          growlight->on();
-          state.growlight_state = GrowlightState::ON;
-        } else {
+        // Even: always OFF
+        if (state.growlight_state != GrowlightState::OFF) {
           growlight->off();
           state.growlight_state = GrowlightState::OFF;
+        }
+      } else {
+        // Odd: always ON
+        if (state.growlight_state != GrowlightState::ON) {
+          growlight->on();
+          state.growlight_state = GrowlightState::ON;
         }
       }
     } else {
       ESP_LOGD(GrowlightController::TAG, "Can't toggle growlight in AUTO mode");
     }
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
   }
-  vTaskDelay(pdMS_TO_TICKS(1000));
 }
 
 void rtc_task(void *pvParameters) {
   rtc->getTimeDate(data.current_time);
+  ESP_LOGI(RTC::TAG, "Current time: %04d-%02d-%02d %02d:%02d:%02d",
+           data.current_time.year(), data.current_time.month(),
+           data.current_time.day(), data.current_time.hour(),
+           data.current_time.minute(), data.current_time.second());
 
   data.schedule_start =
       DateTime(data.current_time.year(), data.current_time.month(),
-               data.current_time.day(), 8, 0,
-               0);  // Start at 08:00:00
+               data.current_time.day(), 7, 0, 0);  // Start at 08:00:00
 
   data.schedule_end =
-      DateTime((data.current_time.year(), data.current_time.month(),
-                data.current_time.day(), 18, 0, 0));  // End at 18:00:00
+      DateTime(data.current_time.year(), data.current_time.month(),
+               data.current_time.day(), 17, 0, 0);  // End at 18:00:00
 
   while (1) {
     // Update current time from RTC
-    if (rtc->getTimeDate(data.current_time) == ESP_OK) {
-      // Check if current time is within the schedule
-      if (data.current_time >= data.schedule_start &&
-          data.current_time <= data.schedule_end) {
-        state.rtc_state = RTCState::INSIDE_SCHEDULE;
-      } else {
-        state.rtc_state = RTCState::OUTSIDE_SCHEDULE;
+
+    if (state.mode_state == MODE::AUTO) {
+      if (rtc->getTimeDate(data.current_time) == ESP_OK) {
+        // Check if current time is within the schedule
+        if (data.current_time >= data.schedule_start &&
+            data.current_time <= data.schedule_end) {
+          state.rtc_state = RTCState::INSIDE_SCHEDULE;
+        } else {
+          state.rtc_state = RTCState::OUTSIDE_SCHEDULE;
+        }
       }
     } else {
       // If RTC read fails, set OUTSIDE_SCHEDULE as a fallback
-      state.rtc_state = RTCState::OUTSIDE_SCHEDULE;
+      state.rtc_state = RTCState::OFF;
     }
 
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
-  vTaskDelay(pdMS_TO_TICKS(1000));
 }
 
 void debug_task(void *pvParameters) {
@@ -249,17 +316,22 @@ void debug_task(void *pvParameters) {
     Serial.println("=========== STATE ==========");
     Serial.printf("Mode: %s\n",
                   (state.mode_state == MODE::MANUAL) ? "MANUAL" : "AUTO");
-    Serial.printf("BT State: %s\n", (state.bt_state == BTState::DISCONNECTED)
+
+    Serial.printf("BT State: %s\n", (state.bt_state == BTState::OFF) ? "OFF"
+                                    : (state.bt_state == BTState::DISCONNECTED)
                                         ? "DISCONNECTED"
                                         : "CONNECTED");
+
     Serial.printf(
         "Growlight State: %s\n",
         (state.growlight_state == GrowlightState::OFF) ? "OFF" : "ON");
+
     Serial.printf("RTC State: %s\n",
-                  (state.rtc_state == RTCState::OUTSIDE_SCHEDULE)
-                      ? "OUTSIDE_SCHEDULE"
-                      : "INSIDE_SCHEDULE");
+                  (state.rtc_state == RTCState::OFF)                ? "OFF"
+                  : (state.rtc_state == RTCState::OUTSIDE_SCHEDULE) ? "OUTSIDE"
+                                                                    : "INSIDE");
     Serial.println("=============================");
+    Serial.println();
 
     Serial.println("=========== DATA ==========");
     Serial.printf("Current Time: %04d-%02d-%02d %02d:%02d:%02d\n",
@@ -275,6 +347,7 @@ void debug_task(void *pvParameters) {
                   data.schedule_end.day(), data.schedule_end.hour(),
                   data.schedule_end.minute(), data.schedule_end.second());
     Serial.println("=============================");
+    Serial.println();
 
     vTaskDelay(pdMS_TO_TICKS(1000));
   }

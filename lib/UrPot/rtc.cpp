@@ -2,6 +2,13 @@
 
 const char *RTC::TAG = "RTC";
 
+RTC::~RTC() {
+  if (_rtc) {
+    delete _rtc;
+    _rtc = nullptr;
+  }
+}
+
 esp_err_t RTC::begin() {
   _rtc = new RTC_DS3231();
 
@@ -24,7 +31,14 @@ esp_err_t RTC::begin() {
     // Set the date and time to a known value
     DateTime now = DateTime(F(__DATE__), F(__TIME__));
     _rtc->adjust(now);
+
+    // DateTime custom_time(2025, 5, 26, 23, 10, 0);
+    // _rtc->adjust(custom_time);
   }
+
+  // NOTE: SET THE TIME HERE
+  // DateTime custom_time(2025, 5, 26, 23, 10, 0);
+  // _rtc->adjust(custom_time);
 
   return ESP_OK;
 }

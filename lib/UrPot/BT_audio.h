@@ -10,6 +10,7 @@
 enum class BTState {
   DISCONNECTED,
   CONNECTED,
+  OFF,
 };
 
 enum class AudioSource {

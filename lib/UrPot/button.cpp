@@ -15,6 +15,7 @@ void Button::onClick(ButtonCallback cb) { _callback = cb; }
 
 void Button::update() {
   bool current = digitalRead(_pin);
+  ESP_LOGD(TAG, "Button state: %s", current ? "HIGH" : "LOW");
 
   // Detect rising edge: LOW -> HIGH (press)
   if (current && !_lastState && _callback) {
